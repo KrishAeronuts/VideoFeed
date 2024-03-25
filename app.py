@@ -1,15 +1,24 @@
 from io import BytesIO
-from flask import Flask, request,send_file
+from flask import Flask, request, send_file
 import cv2
 import numpy as np
 
 app = Flask(__name__)
 
+a = [5,]
+
 @app.route('/receive_frame', methods=['POST'])
 def receive_frame():
     frame = request.files['frame'].read()
-    nparr = np.fromstring(frame, np.uint8)
+    nparr = np.frombuffer(frame, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    # Get thermal value from request
+    thermal = float(request.form['thermal'])
+
+    # Process your image with the received thermal value
+    a.clear()
+    a.append(thermal)
 
     cv2.imwrite('result.jpg', img)
 
@@ -25,6 +34,11 @@ def send_frame():
 
     # Return the image
     return send_file(BytesIO(buffer), mimetype='image/jpeg')
+
+@app.route('/send_thermal', methods=['POST'])
+def send_thermal():
+    print(a[0])
+    return str(a[0])
 
 @app.route('/')
 def hello():
